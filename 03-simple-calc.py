@@ -1,10 +1,10 @@
 import time  # To check how long this program to spend time
 
 x_data = [100, 110, 120, 130, 140]    # Temperature Data
-y_data = [12, 13.5, 13.6, 15.2, 15.7] # Measured registry data on each teperature
+y_data = [12, 13.5, 13.6, 15.2, 15.7] # Measured resistance data on each teperature
 
 print ("Temperature:", x_data) # Print x_data on screen
-print ("Registry:", y_data)    # Print y_data on screen
+print ("Resistance:", y_data)    # Print y_data on screen
 
 # Based on y = W*x + b
 W_min = -10.0    # Set W Minimum value
