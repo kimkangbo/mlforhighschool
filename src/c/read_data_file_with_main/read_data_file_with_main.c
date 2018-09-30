@@ -27,13 +27,13 @@ typedef float			f_32;
 typedef double			d_64;
 
 const char *train_files[] = {	
-								"data/train-images-idx3-ubyte", 
-								"data/train-labels-idx1-ubyte"
+								"../../../data/train-images.idx3-ubyte", 
+								"../../../data/train-labels.idx1-ubyte"
 							};
 							
 const char *test_files[] = {	
-								"data/t10k-images-idx3-ubyte",
-								"data/t10k-labels-idx1-ubyte"
+								"../../../data/t10k-images.idx3-ubyte",
+								"../../../data/t10k-labels.idx1-ubyte"
 							};							
 
 struct mnist_data
@@ -49,8 +49,6 @@ struct mnist_data
 
 FILE * open_mnist_file(const c_8 *file_name)
 {
-	ui_32 file_count = 0;
-	
 	FILE *fp = fopen(file_name, "rb");
 	if(fp == NULL)
 	{
@@ -158,16 +156,15 @@ ui_32 read_data(uc_8 *buff, ui_32 n_byte, FILE *fp, bool covert_data)
 ui_32 read_files_info(struct mnist_data *mnist_obj)
 {
 	uc_8 buff[5] = {0,};
-	ui_32 magic_num = 0, data_num = 0;
 	ui_32 result = 0;
 	
-	magic_num = read_data(buff, 4, mnist_obj->fp_data, false);
+	read_data(buff, 4, mnist_obj->fp_data, false);
 	mnist_obj->data_num = read_data(buff, 4, mnist_obj->fp_data, true);	
 	mnist_obj->pix_row = read_data(buff, 4, mnist_obj->fp_data, true);
 	mnist_obj->pix_col = read_data(buff, 4, mnist_obj->fp_data, true);	
 
-	magic_num = read_data(buff, 4, mnist_obj->fp_label, false);
-	data_num = read_data(buff, 4, mnist_obj->fp_label, false);	
+	read_data(buff, 4, mnist_obj->fp_label, false);
+	read_data(buff, 4, mnist_obj->fp_label, false);	
 	
 	printf("# data set: %dea, pixel %d*%d\n", mnist_obj->data_num, mnist_obj->pix_row, mnist_obj->pix_col); 
 	
@@ -185,53 +182,52 @@ ui_32 get_image_data(FILE *fp, uc_8 *pixels, ui_32 n_size)
 
 ui_32 print_pix(uc_8 pix)
 {
-	uc_8 ascii_code = 0;
+	uc_8 pattern = 0;
 	
-	// 32
 	if(pix > 224)
 	{
-		ascii_code = 2;
+		pattern = '@';
 	}
 	else if(pix > 192)
 	{
-		ascii_code = 35;
+		pattern = '#';
 	}
 	else if(pix > 160)
 	{
-		ascii_code = 15;		
+		pattern = '$';
 	}
 	else if(pix > 128)
 	{
-		ascii_code= 3;
+		pattern = '%';
 	}
 	else if(pix > 96)
 	{
-		ascii_code= 4;
+		pattern = '&';
 	}
 	else if(pix > 64)
 	{
-		ascii_code= 7;
+		pattern = '*';
 	}
 	else if(pix > 32)
 	{
-		ascii_code= 42;
+		pattern = '+';
 	}
 	else if( pix > 16 )
 	{
-		ascii_code= 43;
+		pattern = '^';
 	}
 	else if( pix > 8 )
 	{
-		ascii_code= 45;
+		pattern = '-';
 	}		
 	else if( pix == 0 )
 	{
-		ascii_code= 32;
+		pattern= 32;
 	}
 	
-	printf("%c", ascii_code);	
+	printf("%c", pattern);	
 	
-	return ascii_code;
+	return pattern;
 }
 
 ui_32 read_image(struct mnist_data mnist_obj, uc_8 *pixs, ui_32 n_byte)
@@ -268,7 +264,6 @@ ui_32 read_label(struct mnist_data mnist_obj)
 ui_32 read_images(struct mnist_data mnist_obj)
 {
 	uc_8 *pixs = NULL;
-	uc_8 label = 0;
 	ui_32 data_num = 0;
 	ui_32 n_byte = 0, i = 0, read_count = 0;
 	
@@ -279,7 +274,7 @@ ui_32 read_images(struct mnist_data mnist_obj)
 	for(i=0; i<data_num; i++)
 	{
 		read_image(mnist_obj, pixs, n_byte);
-		label = read_label(mnist_obj);
+		read_label(mnist_obj);
 		read_count++;
 		
 		printf("# If you want to quit hit 'q'. Or not, hit other keys: ");		
@@ -295,7 +290,7 @@ ui_32 read_images(struct mnist_data mnist_obj)
 	return read_count;
 }
 
-void main()
+int main()
 {
 	struct mnist_data train_data = {NULL, NULL, 0, 0, 0};
 //	struct mnist_data test_data = {NULL, NULL, 0, 0, 0};	
@@ -305,4 +300,5 @@ void main()
 	read_images(train_data);
 	close_mnist_file_points(&train_data);
 	
+	return 0;
 }
