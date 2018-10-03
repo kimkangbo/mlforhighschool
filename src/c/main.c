@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include "data_types.h"
 #include "read_data_file.h"
+#include "neural_networks_structure.h"
+#include "forward_propagation.h"
 
 const char *train_files[] = {	
 								"../../data/train-images.idx3-ubyte", 
@@ -15,8 +17,8 @@ const char *test_files[] = {
 int main()
 {
 	struct mnist_data train_data = {NULL, NULL, 0, 0, 0};
-//	struct mnist_data test_data = {NULL, NULL, 0, 0, 0};	
-	
+//	struct mnist_data test_data = {NULL, NULL, 0, 0, 0};
+		
 	get_mnist_file_points(&train_data, train_files);
 	read_files_info(&train_data);
 	read_images(train_data);
