@@ -128,7 +128,7 @@ ui_32 change_memory_to_ui_32(uc_8 *buff, ui_32 byte)
 	return result;
 }
 
-ui_32 read_data(uc_8 *buff, ui_32 n_byte, FILE *fp, bool covert_data)
+ui_32 read_data(uc_8 *buff, ui_32 n_byte, FILE *fp, bool convert_data)
 {
  	ui_32 n_size = 0;
 	ui_32 result = 0;
@@ -143,7 +143,7 @@ ui_32 read_data(uc_8 *buff, ui_32 n_byte, FILE *fp, bool covert_data)
 	}else 
 	{
 //		print_array_by_hex(buff, n_byte);
-		if(covert_data == true)
+		if(convert_data == true)
 		{
 			result = change_memory_to_ui_32(buff, n_byte);
 		}
@@ -236,7 +236,7 @@ ui_32 read_image(struct mnist_data mnist_obj, uc_8 *pixs, ui_32 n_byte)
 	ui_32 i = 0;
 	
 	printf("#n_byte: %d\n",n_byte);
-	result = get_image_data(mnist_obj.fp_data, pixs, n_byte);
+	result = read_data(pixs, n_byte, mnist_obj.fp_data, false);
 	
 	for(i=0; i<n_byte; i++)
 	{
@@ -255,7 +255,7 @@ ui_32 read_label(struct mnist_data mnist_obj)
 	uc_8 label = 0;
 	ui_32 n_byte = 1;
 	
-	get_image_data(mnist_obj.fp_label, &label, n_byte);	
+	read_data(&label, n_byte, mnist_obj.fp_data, false);
 	printf("# picture label: %d\n", label);
 	
 	return label;
