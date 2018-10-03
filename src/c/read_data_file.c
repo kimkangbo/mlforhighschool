@@ -8,44 +8,13 @@ https://github.com/kimkangbo/mlforhighschool
  
 **/
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
+#include "read_data_file.h"
 
 #ifdef DEBUG
     #define dprintf(fmt,args...)     printf(fmt,##args)
 #else
     #define dprintf(fmt,args...)
 #endif
-
-typedef char			c_8;
-typedef unsigned char	uc_8;
-typedef int				i_32;
-typedef unsigned int	ui_32;
-typedef float			f_32;
-typedef double			d_64;
-
-const char *train_files[] = {	
-								"../../../data/train-images.idx3-ubyte", 
-								"../../../data/train-labels.idx1-ubyte"
-							};
-							
-const char *test_files[] = {	
-								"../../../data/t10k-images.idx3-ubyte",
-								"../../../data/t10k-labels.idx1-ubyte"
-							};							
-
-struct mnist_data
-{
-	FILE *fp_data;
-	FILE *fp_label;
-	
-	ui_32 data_num;
-	
-	ui_32 pix_row;
-	ui_32 pix_col;
-};
 
 FILE * open_mnist_file(const c_8 *file_name)
 {
@@ -102,7 +71,8 @@ ui_32 close_mnist_file_points(struct mnist_data *mnist_obj)
 	return closed_file_count;
 }
 
-void print_array_by_hex(uc_8 *buff, ui_32 n_byte){
+void print_array_by_hex(uc_8 *buff, ui_32 n_byte)
+{
 	ui_32 i = 0;
 
 	printf("# hex data for %d bytes\n", n_byte);	
@@ -128,7 +98,7 @@ ui_32 change_memory_to_ui_32(uc_8 *buff, ui_32 byte)
 	return result;
 }
 
-ui_32 read_data(uc_8 *buff, ui_32 n_byte, FILE *fp, bool covert_data)
+ui_32 read_data(uc_8 *buff, ui_32 n_byte, FILE *fp, bool convert_data)
 {
  	ui_32 n_size = 0;
 	ui_32 result = 0;
@@ -143,7 +113,7 @@ ui_32 read_data(uc_8 *buff, ui_32 n_byte, FILE *fp, bool covert_data)
 	}else 
 	{
 //		print_array_by_hex(buff, n_byte);
-		if(covert_data == true)
+		if(convert_data == true)
 		{
 			result = change_memory_to_ui_32(buff, n_byte);
 		}
@@ -167,6 +137,15 @@ ui_32 read_files_info(struct mnist_data *mnist_obj)
 	read_data(buff, 4, mnist_obj->fp_label, false);	
 	
 	printf("# data set: %dea, pixel %d*%d\n", mnist_obj->data_num, mnist_obj->pix_row, mnist_obj->pix_col); 
+	
+	return result;
+}
+
+ui_32 get_image_data(FILE *fp, uc_8 *pixels, ui_32 n_size)
+{
+	ui_32 result = 0;
+	
+	result = read_data(pixels, n_size, fp, false);
 	
 	return result;
 }
@@ -228,6 +207,7 @@ ui_32 read_image(struct mnist_data mnist_obj, uc_8 *pixs, ui_32 n_byte)
 	
 	printf("#n_byte: %d\n",n_byte);
 	result = read_data(pixs, n_byte, mnist_obj.fp_data, false);
+	
 	for(i=0; i<n_byte; i++)
 	{
 		print_pix(pixs[i]);
@@ -278,17 +258,4 @@ ui_32 read_images(struct mnist_data mnist_obj)
 	pixs = NULL;
 	
 	return read_count;
-}
-
-int main()
-{
-	struct mnist_data train_data = {NULL, NULL, 0, 0, 0};
-//	struct mnist_data test_data = {NULL, NULL, 0, 0, 0};	
-	
-	get_mnist_file_points(&train_data, train_files);
-	read_files_info(&train_data);
-	read_images(train_data);
-	close_mnist_file_points(&train_data);
-	
-	return 0;
 }

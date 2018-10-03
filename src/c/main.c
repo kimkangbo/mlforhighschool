@@ -2,19 +2,25 @@
 #include "data_types.h"
 #include "read_data_file.h"
 
-i_32 main(){
-	const c_8 *train_img = "";
-	const c_8 *train_label = "";
-	const c_8 *w_set = "";
-	const c_8 *test_img = "";
-	const c_8 *test_label = "";
-	int data_count = 0;
+const char *train_files[] = {	
+								"../../data/train-images.idx3-ubyte", 
+								"../../data/train-labels.idx1-ubyte"
+							};
+							
+const char *test_files[] = {	
+								"../../../data/t10k-images.idx3-ubyte",
+								"../../../data/t10k-labels.idx1-ubyte"
+							};							
+
+int main()
+{
+	struct mnist_data train_data = {NULL, NULL, 0, 0, 0};
+//	struct mnist_data test_data = {NULL, NULL, 0, 0, 0};	
 	
-	data_count = read_data_file(train_img, train_label);
-	printf("#train_data_set:%d",data_count);
-	
-	data_count = read_data_file(test_img, test_label);
-	printf("#test_data_set:%d",data_count);	
+	get_mnist_file_points(&train_data, train_files);
+	read_files_info(&train_data);
+	read_images(train_data);
+	close_mnist_file_points(&train_data);
 	
 	return 0;
 }
