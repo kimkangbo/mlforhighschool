@@ -27,10 +27,11 @@ void print_array_by_hex(uc_8 *buff, ui_32 n_byte);
 ui_32 change_memory_to_ui_32(uc_8 *buff, ui_32 byte);
 ui_32 read_data(uc_8 *buff, ui_32 n_byte, FILE *fp, bool convert_data);
 ui_32 read_files_info(struct mnist_data *mnist_obj);
-ui_32 get_image_data(FILE *fp, uc_8 *pixels, ui_32 n_size);
 ui_32 print_pix(uc_8 pix);
 ui_32 read_image(struct mnist_data mnist_obj, uc_8 *pixs, ui_32 n_byte);
 ui_32 read_label(struct mnist_data mnist_obj);
 ui_32 read_images(struct mnist_data mnist_obj);
+ui_32 get_image_data(struct mnist_data mnist_obj, uc_8 *pixs);
+ui_32 get_label(struct mnist_data mnist_obj, uc_8 *label);
 
 #endif

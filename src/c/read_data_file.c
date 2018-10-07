@@ -141,15 +141,6 @@ ui_32 read_files_info(struct mnist_data *mnist_obj)
 	return result;
 }
 
-ui_32 get_image_data(FILE *fp, uc_8 *pixels, ui_32 n_size)
-{
-	ui_32 result = 0;
-	
-	result = read_data(pixels, n_size, fp, false);
-	
-	return result;
-}
-
 ui_32 print_pix(uc_8 pix)
 {
 	uc_8 pattern = 0;
@@ -258,4 +249,23 @@ ui_32 read_images(struct mnist_data mnist_obj)
 	pixs = NULL;
 	
 	return read_count;
+}
+
+ui_32 get_image_data(struct mnist_data mnist_obj, uc_8 *pixs)
+{
+	ui_32 n_byte = 0, result = 0;
+	
+	n_byte = (mnist_obj.pix_row * mnist_obj.pix_col) * sizeof(uc_8);		
+	result = read_data(pixs, n_byte, mnist_obj.fp_data, false);
+		
+	return result;
+}
+
+ui_32 get_label(struct mnist_data mnist_obj, uc_8 *label)
+{
+	ui_32 n_byte = 1, result = 0;
+	
+	read_data(label, n_byte, mnist_obj.fp_label, false);
+	
+	return result;
 }
