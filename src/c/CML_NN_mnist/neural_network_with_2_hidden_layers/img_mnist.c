@@ -143,10 +143,11 @@ void img_mnist_learning(img_mnist_info *img)
             printf("read error on while loop in the img_mnist_learning()\n");
             break;
         }
+        
+		cost = nn_running (p, (int)ubyte, isize, LEARNING_RATE);
 
-        cost = nn_running (p, (int)ubyte, isize, LEARNING_RATE);
-        if (!(k % 1000))
-            printf("Learning Count:%u, Cost: %f\n", k, cost);
+		if (!(k % 1000))
+			printf("Learning Count:%u, Cost: %f\n", k, cost);
         k++;
     } //while
 

@@ -21,9 +21,9 @@
 #define NUM_OUTPUTS    10
 
 ///Weights
-float Wij[NUM_INPUTS+1][NUM_HIDDEN_1];
-float Wjk[NUM_HIDDEN_1+1][NUM_HIDDEN_2];
-float Wkl[NUM_HIDDEN_2+1][NUM_OUTPUTS];
+float W0[NUM_INPUTS+1][NUM_HIDDEN_1];
+float W1[NUM_HIDDEN_1+1][NUM_HIDDEN_2];
+float W2[NUM_HIDDEN_2+1][NUM_OUTPUTS];
 
 
 int debug = 0; //0 for now debugging, 1 for the loss each iteration, 2 for all vectors/matrices each iteration
@@ -40,165 +40,227 @@ static void nn_debug (const char *label, float *m, int rows, int cols)
 
 static float nn_learning(float *x, float *y, float learningrate)
 {
-	float Zj[NUM_HIDDEN_1]; //weighted sums for the 1st hidden nodes
-	float Zk[NUM_HIDDEN_2]; //weighted sums for the 2nd hidden nodes
-	float Zl[NUM_OUTPUTS];  //weighted sums for the output nodes
+	float Z0[NUM_HIDDEN_1]; //weighted sums for the 1st hidden nodes
+	float Z1[NUM_HIDDEN_2]; //weighted sums for the 2nd hidden nodes
+	float Z2[NUM_OUTPUTS];  //weighted sums for the output nodes
 	float p[NUM_OUTPUTS]; //activation values of the output nodes
 
-	float Hj[NUM_HIDDEN_1+1]; //activation values of the 1st hidden nodes, including one extra for the bias
-	float Hk[NUM_HIDDEN_2+1]; //activation values of the 2nd hidden nodes, including one extra for the bias	
+	float h0[NUM_HIDDEN_1+1]; //activation values of the 1st hidden nodes, including one extra for the bias
+	float h1[NUM_HIDDEN_2+1]; //activation values of the 2nd hidden nodes, including one extra for the bias	
 	float err[NUM_OUTPUTS]; //error in the output
 
-	float dWij[NUM_INPUTS+1][NUM_HIDDEN_1]; //adjustments to weights between inputs x and 1st hidden nodes
-	float dWjk[NUM_HIDDEN_1+1][NUM_HIDDEN_2]; //adjustments to weights between inputs x and 2nd hidden nodes
-	float dWkl[NUM_HIDDEN_2+1][NUM_OUTPUTS]; //adjustments to weights between hidden nodes and output y
+	float dW0[NUM_INPUTS+1][NUM_HIDDEN_1]; //adjustments to weights between inputs x and 1st hidden nodes
+	float dW1[NUM_HIDDEN_1+1][NUM_HIDDEN_2]; //adjustments to weights between inputs x and 2nd hidden nodes
+	float dW2[NUM_HIDDEN_2+1][NUM_OUTPUTS]; //adjustments to weights between hidden nodes and output y
 
 	float loss, sum; //for storing the loss
-	int i, h, o; //looping variables for iterations, input nodes, hidden nodes, output nodes
+	int in, ih0, ih1, io; //looping variables for iterations, input nodes, hidden nodes, output nodes
 
     ///Forward propagation ------------------------------------------------
     //Start the forward pass by calculating the weighted sums and activation values for the hidden layer	
 	// 1st hidden layer
-    memset (Wij, 0, sizeof (Wij)); //set all the weighted sums to zero
-    for (h=0; h<NUM_HIDDEN_1; h++){
-        for (i=0; i<NUM_INPUTS+1; i++){
-            Zj[h] += x[i] * Wij[i][h]; //multiply and sum inputs * weights
+    memset (W0, 0, sizeof (W0)); //set all the weighted sums to zero
+    for (ih0=0; ih0<NUM_HIDDEN_1; ih0++){
+        for (in=0; in<NUM_INPUTS+1; in++){
+            Z0[ih0] += x[in] * W0[in][ih0]; //multiply and sum inputs * weights
 		}
 	}
-    if (debug>=2) nn_debug ("input/hidden weights", (float*)Wij, NUM_INPUTS+1, NUM_HIDDEN_1);
-    if (debug>=2) nn_debug ("hidden weighted sums", Zj, NUM_HIDDEN_1, 1);
+    if (debug>=2) nn_debug ("input/hidden weights", (float*)W0, NUM_INPUTS+1, NUM_HIDDEN_1);
+    if (debug>=2) nn_debug ("hidden weighted sums", Z0, NUM_HIDDEN_1, 1);
 
-    Hj[0]=1; //set the bias for the first hidden node to 1
-    for (h=0; h<NUM_HIDDEN_1; h++)
-        Hj[h+1] = tanh (Zj[h]); //apply activation function on other 1st hidden nodes
-    if (debug>=2) nn_debug ("hidden node activation values", Hj, NUM_HIDDEN_1+1, 1);
+    h0[NUM_HIDDEN_1]=1; //set the bias for the first hidden node to 1
+    for (ih0=0; ih0<NUM_HIDDEN_1; ih0++){
+        h0[ih0] = tanh (Z0[ih0]); //apply activation function on other 1st hidden nodes
+	}
+    if (debug>=2) nn_debug ("hidden node activation values", h0, NUM_HIDDEN_1+1, 1);
 	
 	// 2nd hidden layer
-    memset (Wjk, 0, sizeof (Wjk)); //set all the weighted sums to zero
-    for (h=0; h<NUM_HIDDEN_2; h++){
-        for (i=0; i<NUM_HIDDEN_1+1; i++){
-            Zk[h] += Hj[i] * Wjk[i][h]; //multiply and sum inputs * weights
+    memset (W1, 0, sizeof (W1)); //set all the weighted sums to zero
+    for (ih1=0; ih1<NUM_HIDDEN_2; ih1++){
+        for (ih0=0; ih0<NUM_HIDDEN_1+1; ih0++){
+            Z1[ih1] += h0[ih0] * W1[ih0][ih1]; //multiply and sum inputs * weights
 		}
 	}
-    if (debug>=2) nn_debug ("input/hidden weights", (float*)Wjk, NUM_HIDDEN_1+1, NUM_HIDDEN_2);
-    if (debug>=2) nn_debug ("hidden weighted sums", Zk, NUM_HIDDEN_2, 1);
+    if (debug>=2) nn_debug ("input/hidden weights", (float*)W1, NUM_HIDDEN_1+1, NUM_HIDDEN_2);
+    if (debug>=2) nn_debug ("hidden weighted sums", Z1, NUM_HIDDEN_2, 1);
 
-    Hk[0]=1; //set the bias for the first hidden node to 1
-    for (h=0; h<NUM_HIDDEN_2; h++)
-        Hk[h+1] = tanh (Zk[h]); //apply activation function on other 1st hidden nodes
-    if (debug>=2) nn_debug ("hidden node activation values", Hk, NUM_HIDDEN_2+1, 1);
+    h1[NUM_HIDDEN_2]=1; //set the bias for the second hidden node to 1
+    for (ih1=0; ih1<NUM_HIDDEN_2; ih1++){
+        h1[h] = tanh (Z1[ih1]); //apply activation function on other 1st hidden nodes
+	}
+    if (debug>=2) nn_debug ("hidden node activation values", h1, NUM_HIDDEN_2+1, 1);
 	
 	// Output layer
-    memset (Zl, 0, sizeof (Zl)); //set all the weighted sums to zero
-    for (o=0; o<NUM_OUTPUTS; o++)
-        for (h=0; h<NUM_HIDDEN_2+1; h++)
-            Zl[o] += Hk[h] * Wkl[h][o]; //multiply and sum inputs * weights
-    if (debug>=2) nn_debug ("hidden/output weights", (float*)Wkl, NUM_HIDDEN_2+1, NUM_OUTPUTS);
+    memset (Z2, 0, sizeof (Z2)); //set all the weighted sums to zero
+    for (io=0; io<NUM_OUTPUTS; io++){
+        for (ih1=0; ih1<NUM_HIDDEN_2+1; ih1++){
+            Z2[io] += h1[ih1] * W2[ih1][io]; //multiply and sum inputs * weights
+		}
+	}
+    if (debug>=2) nn_debug ("hidden/output weights", (float*)W2, NUM_HIDDEN_2+1, NUM_OUTPUTS);
     if (debug>=2) nn_debug ("output weighted sums", Zl, NUM_OUTPUTS, 1);
 
-    for (sum=0, o=0; o<NUM_OUTPUTS; o++) {
-        p[o] = exp (Zl[o]);
-        sum += p[o];
+    for (sum=0, io=0; io<NUM_OUTPUTS; io++) {
+        p[io] = exp (Z2[io]);
+        sum += p[io];
     } //compute exp(z) for softmax
-    for (o=0; o<NUM_OUTPUTS; o++) p[o] /= sum; //apply softmax by dividing by the the sum all the exps
+    for (io=0; io<NUM_OUTPUTS; io++){		
+		p[io] /= sum; //apply softmax by dividing by the the sum all the exps
+	}
     if (debug>=2) nn_debug ("softmax probabilities", p, NUM_OUTPUTS, 1);
 
-    for (o=0; o<NUM_OUTPUTS; o++)
-        err[o] = p[o] - y[o]; //the error for each output
+    for (io=0; io<NUM_OUTPUTS; io++){
+        err[io] = p[io] - y[io]; //the error for each output
+	}
     if (debug>=2) nn_debug ("output error", err, NUM_OUTPUTS, 1);
 
-    for (loss=0, o=0; o<NUM_OUTPUTS; o++)
-        loss -= y[o] * log (p[o]); //the loss
-
+    for (loss=0, io=0; io<NUM_OUTPUTS; io++){
+        loss -= y[io] * log (p[io]); //the loss
+	}
+	
     if (debug>=1) printf ("loss(cost): %10.5f\n", loss); //output the loss
 
     /// Back propagation --------------------------------------------------
-    //Multiply h*e to get the adjustments to deltaWjk
-    for (h=0; h<NUM_HIDDEN_2+1; h++)
-        for (o=0; o<NUM_OUTPUTS; o++)
-            dWkl[h][o] = Hk[h] * err[o];
-    if (debug>=2) nn_debug ("hidden/output weights gradient", (float*)dWkl, NUM_HIDDEN_2+1, NUM_OUTPUTS);
+    //Multiply h1*e to get the adjustments to dW2
+    for (ih1=0; ih1<NUM_HIDDEN_2+1; ih1++){
+        for (io=0; io<NUM_OUTPUTS; io++){
+            dW2[ih1][io] = h1[ih1] * err[io];
+		}
+	}
+    if (debug>=2) nn_debug ("hidden/output weights gradient", (float*)dW2, NUM_HIDDEN_2+1, NUM_OUTPUTS);
 
-    //Backward propagate the errors and store in the hActivationValues vector
-    memset (Hk, 0, sizeof (Hk)); //set all the weighted sums to zero
-    for (h=1; h<NUM_HIDDEN+1; h++)
-        for (o=0; o<NUM_OUTPUTS; o++)
-            hActivationValues[h] += Wjk[h][o] * outputErrors[o]; //multiply and sum inputs * weights
-    if (debug>=2) nn_debug ("back propagated error values", hActivationValues, NUM_HIDDEN+1, 1);
+    //Backward propagate the errors and store in the h1 vector by using h1 temporally
+    memset (h1, 0, sizeof (h1)); //set all the weighted sums to zero
+    for (ih1=0; ih1<NUM_HIDDEN_2+1; ih1++){
+        for (io=0; io<NUM_OUTPUTS; io++){
+            h1[ih1] += W2[ih1][io] * err[io]; //multiply and sum inputs * weights
+		}
+	}
+    if (debug>=2) nn_debug ("back propagated error values", h1, NUM_HIDDEN_2+1, 1);
 
-    for (h=0; h<NUM_HIDDEN; h++)
-        zhWeightedSums[h] = hActivationValues[h+1] * (1 - pow (tanh (zhWeightedSums[h]), 2)); //apply activation function gradient
-    if (debug>=2) nn_debug ("hidden weighted sums after gradient", zhWeightedSums, NUM_HIDDEN, 1);
+	// for dW1
+    for (ih1=0; ih1<NUM_HIDDEN_2; ih1++){
+        Z1[ih1] = h1[ih1] * (1 - pow (tanh (Z1[h]), 2)); //apply activation function gradient by using Z1 temporally
+	}
+    if (debug>=2) nn_debug ("hidden weighted sums after gradient", Z1, NUM_HIDDEN_2, 1);
 
-    //Multiply x*eh*zh to get the adjustments to deltaWij, this does not include the bias node
-    for (i=0; i<NUM_INPUTS+1; i++)
-        for (h=0; h<NUM_HIDDEN; h++)
-            deltaWij[i][h] = x[i] * zhWeightedSums[h];
-    if (debug>=2) nn_debug ("input/hidden weights gradient", (float*)deltaWij, NUM_INPUTS+1, NUM_HIDDEN);
+    //Multiply x*eh*zh to get the adjustments to dW1, this does not include the bias node
+    for (ih0=0; ih0<NUM_HIDDEN_1+1; ih0++){
+        for (ih1=0; ih1<NUM_HIDDEN_2; ih1++){
+            dW1[ih0][ih1] = h0[ih0] * Z1[ih1];
+		}
+	}
+    if (debug>=2) nn_debug ("hidden_1/hidden_2 weights gradient", (float*)dW1, NUM_HIDDEN_1+1, NUM_HIDDEN_2);
 
+	// for dW0	
+    for (ih0=0; ih0<NUM_HIDDEN_1; ih0++){
+		for (ih1=0; ih1<NUM_HIDDEN_2; ih1++){
+			Z0[ih0] = h0[ih0] * (1 - pow (tanh (Z0[ih0]), 2))*Z1[ih1]; //apply activation function gradient temporary
+		}
+	}
+    if (debug>=2) nn_debug ("hidden weighted sums after gradient", Z0, NUM_HIDDEN_1, 1);
 
+    //Multiply x*h*zh*sum(zh) to get the adjustments to dW0, this does not include the bias node	
+    for (in=0; in<NUM_INPUTS+1; in++){
+        for (ih0=0; ih0<NUM_HIDDEN_1; ih0++){
+            dW0[in][ih0] = x[in] * Z0[ih0];
+		}
+	}
+    if (debug>=2) nn_debug ("input/hidden weights gradient", (float*)W0, NUM_INPUTS+1, NUM_HIDDEN_1);	
+	
     /// Now add in the adjustments ----------------------------------------
-    for (h=0; h<NUM_HIDDEN+1; h++)
-        for (o=0; o<NUM_OUTPUTS; o++)
-            Wjk[h][o] -= learningrate * deltaWjk[h][o];
+    for (h=0; h<NUM_HIDDEN_2+1; h++){
+        for (o=0; o<NUM_OUTPUTS; o++){
+            W2[h][o] -= learningrate * dW2[h][o];
+		}
+	}
 
+    for (ih0=0; ih0<NUM_HIDDEN_1+1; ih0++){
+        for (ih1=0; ih1<NUM_HIDDEN_2; ih1++){
+            W1[ih0][ih1] -= learningrate * dW1[ih0][ih1];
+		}
+	}
 
-    for (i=0; i<NUM_INPUTS+1; i++)
-        for (h=0; h<NUM_HIDDEN; h++)
-            Wij[i][h] -= learningrate * deltaWij[i][h];
-
+    for (in=0; in<NUM_INPUTS+1; in++){
+        for (ih0=0; ih0<NUM_HIDDEN_1; ih0++){
+            W0[in][ih0] -= learningrate * dW0[in][ih0];
+		}
+	}
+	
     return loss;    ///cost
 }
 
 int nn_answer(float *x, float *y)
 {
-	float zhWeightedSums[NUM_HIDDEN]; //weighted sums for the hidden nodes
-	float zyWeightedSums[NUM_OUTPUTS]; //weighted sums for the output nodes
-	float probabilities[NUM_OUTPUTS]; //activation values of the output nodes
+	float Z0[NUM_HIDDEN_1]; //weighted sums for the 1st hidden nodes
+	float Z1[NUM_HIDDEN_2]; //weighted sums for the 2nd hidden nodes
+	float Z2[NUM_OUTPUTS];  //weighted sums for the output nodes		
+	float p[NUM_OUTPUTS]; //activation values of the output nodes
 
-	float hActivationValues[NUM_HIDDEN+1]; //activation values of the hidden nodes, including one extra for the bias
-
+	float h0[NUM_HIDDEN_1+1]; //activation values of the 1st hidden nodes, including one extra for the bias
+	float h1[NUM_HIDDEN_2+1]; //activation values of the 2nd hidden nodes, including one extra for the bias	
+	
 	float sum; //for storing the loss
-	int i, h, o; //looping variables for iterations, input nodes, hidden nodes, output nodes
+	int in, ih0, ih1, io, ir; //looping variables for iterations, input nodes, hidden nodes, output nodes, result number
 
     if (debug>=2) {
-        nn_debug ("input/hidden weights(Wij)", (float*)Wij, NUM_INPUTS+1, NUM_HIDDEN);
-        nn_debug ("hidden/output weights(Wjk)", (float*)Wjk, NUM_HIDDEN+1, NUM_OUTPUTS);
+        nn_debug ("input/hidden1 weights(W0)", (float*)W0, NUM_INPUTS+1, NUM_HIDDEN_1);
+        nn_debug ("hidden1/hidden2 weights(W1)", (float*)W1, NUM_HIDDEN_1+1, NUM_HIDDEN_2);		
+        nn_debug ("hidden2/output weights(W2)", (float*)W2, NUM_HIDDEN_2+1, NUM_OUTPUTS);
     }
 
     ///Forward propagation ------------------------------------------------
-    //Start the forward pass by calculating the weighted sums and activation values for the hidden layer
-    memset (zhWeightedSums, 0, sizeof (zhWeightedSums)); //set all the weighted sums to zero
-    for (h=0; h<NUM_HIDDEN; h++)
-        for (i=0; i<NUM_INPUTS+1; i++)
-            zhWeightedSums[h] += x[i] * Wij[i][h]; //multiply and sum inputs * weights
+    //Start the forward pass by calculating the weighted sums and activation values for the 1st hidden layer
+    memset (Z0, 0, sizeof (Z0)); //set all the weighted sums to zero
+    for (ih0=0; ih0<NUM_HIDDEN_1; ih0++){
+        for (in=0; in<NUM_INPUTS+1; in++){
+            Z0[ih0] += x[in] * W0[in][ih0]; //multiply and sum inputs * weights
+		}
+	}
 
-    hActivationValues[0]=1; //set the bias for the first hidden node to 1
-    for (h=0; h<NUM_HIDDEN; h++)
-        hActivationValues[h+1] = tanh (zhWeightedSums[h]); //apply activation function on other hidden nodes
+    h0[NUM_HIDDEN_1]=1; //set the bias for the first hidden node to 1
+    for (ih0=0; ih0<NUM_HIDDEN_1; ih0++){
+        h0[ih0] = tanh(Z0[ih0]); //apply activation function on other hidden nodes
+	}
 
-    memset (zyWeightedSums, 0, sizeof (zyWeightedSums)); //set all the weighted sums to zero
-    for (o=0; o<NUM_OUTPUTS; o++)
-        for (h=0; h<NUM_HIDDEN+1; h++)
-            zyWeightedSums[o] += hActivationValues[h] * Wjk[h][o]; //multiply and sum inputs * weights
+    //Continue the forward pass by calculating the weighted sums and activation values for the 2nd hidden layer	
+    memset (Z1, 0, sizeof (Z1)); //set all the weighted sums to zero
+    for (ih1=0; ih1<NUM_HIDDEN_2; ih1++){
+        for (ih0=0; ih0<NUM_HIDDEN_1+1; ih0++){
+            Z1[ih1] += h0[ih0] * W1[ih0][ih1]; //multiply and sum h0 * weights
+		}
+	}
 
-    for (sum=0, o=0; o<NUM_OUTPUTS; o++) {
-        probabilities[o] = exp (zyWeightedSums[o]);
-        sum += probabilities[o];
+    h1[NUM_HIDDEN_2]=1; //set the bias for the first hidden node to 1
+    for (ih1=0; ih1<NUM_HIDDEN_2; ih1++){
+        h1[ih1] = tanh(Z1[ih1]); //apply activation function on other hidden nodes
+	}
+	
+    //Continue the forward pass by calculating the weighted sums for the output layer			
+    memset (Z2, 0, sizeof (Z2)); //set all the weighted sums to zero
+    for (io=0; io<NUM_OUTPUTS; io++)
+        for (ih1=0; ih1<NUM_HIDDEN_2+1; ih1++)
+            Z2[io] += h1[ih1] * W2[ih1][io]; //multiply and sum inputs * weights
+
+    for (sum=0, io=0; o<NUM_OUTPUTS; io++) {
+        p[io] = exp (Z2[io]);
+        sum += p[io];
     } //compute exp(z) for softmax
-    for (o=0; o<NUM_OUTPUTS; o++) probabilities[o] /= sum; //apply softmax by dividing by the the sum all the exps
+    for (io=0; io<NUM_OUTPUTS; io++){		
+		probabilities[io] /= sum; //apply softmax by dividing by the the sum all the exps
+	}
     if (debug>=2) nn_debug ("softmax probabilities", probabilities, NUM_OUTPUTS, 1);
 
-    i = 0;
+    ir = 0;
     sum = 0.0;
-    for (o=0; o<NUM_OUTPUTS; o++) {
-        y[o] = probabilities[o];
-        if (y[o] > sum) {
-            sum = y[o];
-            i = o;
+    for (io=0; io<NUM_OUTPUTS; io++) {
+        y[io] = probabilities[io];
+        if (y[io] > sum) {
+            sum = y[io];
+            ir = io;
         }
     }
-    return i;   ///answer
+    return ir;   ///answer
 }
 
 void nn_write(char *fname)
@@ -357,43 +419,39 @@ int nn_init(int flag)
 float nn_running (unsigned char *xdata, int ydata, int isize, float rate)
 {
     int i;
-	int x[NUM_INPUTS+1];
-	float x2[NUM_INPUTS+1];
+	float x[NUM_INPUTS+1];
 	float y[NUM_OUTPUTS] = {0.0,};
 
-	x2[0] = 1.0; ///bias
+	x[isize] = 1.0; ///bias
 	///memcpy ((float *)&x[1], (float *)xdata, isize);
 	for (i=0; i<isize; i++) {
-        x[i+1] = (int)xdata[i];
-        ///x2[i+1] = (float)x[i+1] / 128.0;
-        x2[i+1] = (float)x[i+1] / 255.0;
+        ///x[i] = (float)xdata[i] / 128.0;
+        x[i] = (float)xdata[i] / 255.0;
     }
 
 	y[ydata] = 1.0;
 
-	return nn_learning(x2, y, rate);
+	return nn_learning(x, y, rate);
 }
 
 int nn_question(unsigned char *xdata, int ydata, int isize)
 {
     int i, ans;
-	int x[NUM_INPUTS+1];
-	float x2[NUM_INPUTS+1];
+	float x[NUM_INPUTS+1];
 	float y[NUM_OUTPUTS] = {0.0,};
 
-	x2[0] = 1.0; ///bias
+	x[isize] = 1.0; ///bias
 	///memcpy ((float *)&x[1], (float *)xdata, isize);
 	for (i=0; i<isize; i++) {
-        x[i+1] = (int)xdata[i];
-        ///x2[i+1] = (float)x[i+1] / 128.0;
-        x2[i+1] = (float)x[i+1] / 255.0;
+        ///x[i] = (float)xdata[i] / 128.0;
+        x[i] = (float)xdata[i] / 255.0;
     }
 
 	y[ydata] = 1.0;
 
 	///printf ("------------------------------- Answer --------------------------------\n");
-    ///nn_debug ("x input", &x2[1], NUM_INPUTS, 1);
-    ans = nn_answer(x2, y);
+    ///nn_debug ("x input", &x[1], NUM_INPUTS, 1);
+    ans = nn_answer(x, y);
     ///nn_debug ("y answer", y, NUM_OUTPUTS, 1);
     printf("What is this(%d)?, It is %d.\n", ydata, ans);
 
