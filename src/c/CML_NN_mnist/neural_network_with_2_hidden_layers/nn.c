@@ -265,7 +265,7 @@ int nn_answer(float *x, float *y)
 
 void nn_write(char *fname)
 {
-	int i, h, o;
+	int in, ih0, ih1, io;
 	int fd;
 
 	fd = open(fname, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
@@ -274,18 +274,28 @@ void nn_write(char *fname)
         return;
 	}
 
-	for (i=0; i<NUM_INPUTS+1; i++)
-        for (h=0; h<NUM_HIDDEN; h++)
-            write(fd, &Wij[i][h], sizeof(float));
+	for (in=0; in<NUM_INPUTS+1; in++){
+        for (ih0=0; ih0<NUM_HIDDEN_1; ih0++){
+            write(fd, &W0[in][ih0], sizeof(float));
+		}
+	}
 
-	for (h=0; h<NUM_HIDDEN+1; h++)
-        for (o=0; o<NUM_OUTPUTS; o++)
-            write(fd, &Wjk[h][o], sizeof(float));
+	for (ih0=0; ih0<NUM_HIDDEN_1+1; ih0++){
+        for (ih1=0; ih1<NUM_HIDDEN_2; ih1++){
+            write(fd, &W1[ih0][ih1], sizeof(float));
+		}
+	}	
+	
+	for (ih1=0; ih1<NUM_HIDDEN_2+1; ih1++){
+        for (io=0; io<NUM_OUTPUTS; io++){
+            write(fd, &W2[ih1][io], sizeof(float));
+		}
+	}
 
     close(fd);
 
     for (i=0; i<10; i++)
-        printf("%f, ", Wij[i][0]);
+        printf("%f, ", W0[i][0]);
     printf("\n");
 
     printf("weight have write to file(%s)\n", fname);
