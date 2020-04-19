@@ -61,9 +61,9 @@ static float nn_learning(float *x, float *y, float learningrate)
     if (debug>=2) nn_debug ("input/hidden weights", (float*)W0, NUM_INPUTS+1, NUM_HIDDEN);
     if (debug>=2) nn_debug ("hidden weighted sums", Z0, NUM_HIDDEN, 1);
 
-    h0[NUM_HIDDEN]=1; //set the bias for the last hidden node to 1
+    h0[0]=1; //set the bias for the first hidden node to 1
     for (h=0; h<NUM_HIDDEN; h++)
-        h0[h] = tanh (Z0[h]); //apply activation function on other hidden nodes
+        h0[h+1] = tanh (Z0[h]); //apply activation function on other hidden nodes
     if (debug>=2) nn_debug ("hidden node activation values", h0, NUM_HIDDEN+1, 1);
 
     memset (Z1, 0, sizeof (Z1)); //set all the weighted sums to zero
@@ -105,7 +105,7 @@ static float nn_learning(float *x, float *y, float learningrate)
     if (debug>=2) nn_debug ("back propagated error values", h0, NUM_HIDDEN+1, 1);
 
     for (h=0; h<NUM_HIDDEN; h++)
-        Z0[h] = h0[h] * (1 - pow (tanh (Z0[h]), 2)); //apply activation function gradient
+        Z0[h] = h0[h+1] * (1 - pow (tanh (Z0[h]), 2)); //apply activation function gradient
     if (debug>=2) nn_debug ("hidden weighted sums after gradient", Z0, NUM_HIDDEN, 1);
 
     //Multiply x*eh*zh to get the adjustments to deltaW0, this does not include the bias node
@@ -151,9 +151,9 @@ int nn_answer(float *x, float *y)
         for (i=0; i<NUM_INPUTS+1; i++)
             Z0[h] += x[i] * W0[i][h]; //multiply and sum inputs * weights
 
-    h0[NUM_HIDDEN]=1; //set the bias for the last hidden node to 1
+    h0[0]=1; //set the bias for the first hidden node to 1
     for (h=0; h<NUM_HIDDEN; h++)
-        h0[h] = tanh (Z0[h]); //apply activation function on other hidden nodes
+        h0[h+1] = tanh (Z0[h]); //apply activation function on other hidden nodes
 
     memset (Z1, 0, sizeof (Z1)); //set all the weighted sums to zero
     for (o=0; o<NUM_OUTPUTS; o++)
@@ -335,39 +335,43 @@ int nn_init(int flag)
 float nn_running (unsigned char *xdata, int ydata, int isize, float rate)
 {
     int i;
-	float x[NUM_INPUTS+1];
+	int x[NUM_INPUTS+1];
+	float x2[NUM_INPUTS+1];
 	float y[NUM_OUTPUTS] = {0.0,};
 
-	x[isize] = 1.0; ///bias
+	x2[0] = 1.0; ///bias
 	///memcpy ((float *)&x[1], (float *)xdata, isize);
 	for (i=0; i<isize; i++) {
-        ///x[i] = (float)xdata[i] / 128.0;
-        x[i] = (float)xdata[i] / 255.0;
+        x[i+1] = (int)xdata[i];
+        ///x2[i+1] = (float)x[i+1] / 128.0;
+        x2[i+1] = (float)x[i+1] / 255.0;
     }
 
 	y[ydata] = 1.0;
 
-	return nn_learning(x, y, rate);
+	return nn_learning(x2, y, rate);
 }
 
 int nn_question(unsigned char *xdata, int ydata, int isize)
 {
     int i, ans;
-	float x[NUM_INPUTS+1];
+	int x[NUM_INPUTS+1];
+	float x2[NUM_INPUTS+1];
 	float y[NUM_OUTPUTS] = {0.0,};
 
-	x[isize] = 1.0; ///bias
+	x2[0] = 1.0; ///bias
 	///memcpy ((float *)&x[1], (float *)xdata, isize);
 	for (i=0; i<isize; i++) {
-        ///x[i] = (float)xdata[i] / 128.0;
-        x[i] = (float)xdata[i] / 255.0;
+        x[i+1] = (int)xdata[i];
+        ///x2[i+1] = (float)x[i+1] / 128.0;
+        x2[i+1] = (float)x[i+1] / 255.0;
     }
 
 	y[ydata] = 1.0;
 
 	///printf ("------------------------------- Answer --------------------------------\n");
-    ///nn_debug ("x input", &x[1], NUM_INPUTS, 1);
-    ans = nn_answer(x, y);
+    ///nn_debug ("x input", &x2[1], NUM_INPUTS, 1);
+    ans = nn_answer(x2, y);
     ///nn_debug ("y answer", y, NUM_OUTPUTS, 1);
     printf("What is this(%d)?, It is %d.\n", ydata, ans);
 
