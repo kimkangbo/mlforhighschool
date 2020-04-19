@@ -119,8 +119,8 @@ static float nn_learning(float *x, float *y, float learningrate)
             dWkl[h][o] = Hk[h] * err[o];
     if (debug>=2) nn_debug ("hidden/output weights gradient", (float*)dWkl, NUM_HIDDEN_2+1, NUM_OUTPUTS);
 
-    //Backward propogate the errors and store in the hActivationValues vector
-    memset (Hk[, 0, sizeof (hActivationValues)); //set all the weighted sums to zero
+    //Backward propagate the errors and store in the hActivationValues vector
+    memset (Hk, 0, sizeof (Hk)); //set all the weighted sums to zero
     for (h=1; h<NUM_HIDDEN+1; h++)
         for (o=0; o<NUM_OUTPUTS; o++)
             hActivationValues[h] += Wjk[h][o] * outputErrors[o]; //multiply and sum inputs * weights
