@@ -83,7 +83,7 @@ static float diff_actv(float x, int activation_type){
 	return result;
 }
 
-static float nn_learning(float *x, float *y, float learningrate)
+static float nn_learning(float *x, float *y, float learningrate, float lamda)
 {
 	float Z0[NUM_HIDDEN_1]; //weighted sums for the hidden nodes
 	float Z1[NUM_OUTPUTS]; //weighted sums for the output nodes
@@ -177,16 +177,16 @@ static float nn_learning(float *x, float *y, float learningrate)
     if (debug>=2) nn_debug ("input/hidden weights gradient", (float*)W0, NUM_INPUTS+1, NUM_HIDDEN_1);
 
 
-    /// Now add in the adjustments ----------------------------------------
+    /// Now add in the adjustments, added W regularization for overfitting
     for (ih0=0; ih0<NUM_HIDDEN_1+1; ih0++){
         for (io=0; io<NUM_OUTPUTS; io++){
-            W1[ih0][io] -= learningrate * dW1[ih0][io];
+            W1[ih0][io] = (1-learningrate*lamda/NUM_INPUTS)*W1[ih0][io] - learningrate * dW1[ih0][io];
 		}
 	}
 
     for (in=0; in<NUM_INPUTS+1; in++){
         for (ih0=0; ih0<NUM_HIDDEN_1; ih0++){
-            W0[in][ih0] -= learningrate * dW0[in][ih0];
+            W0[in][ih0] = (1-learningrate*lamda/NUM_INPUTS)*W0[in][ih0] - learningrate * dW0[in][ih0];
 		}
 	}
 
@@ -397,7 +397,7 @@ int nn_init(int flag)
     @isize: size of xdata
     @rate: learning rate
 */
-float nn_running (unsigned char *xdata, int ydata, int isize, float rate)
+float nn_running (unsigned char *xdata, int ydata, int isize, float rate, float lamda)
 {
     int i;
 	float x[NUM_INPUTS+1];
@@ -412,7 +412,7 @@ float nn_running (unsigned char *xdata, int ydata, int isize, float rate)
 
 	y[ydata] = 1.0;
 
-	return nn_learning(x, y, rate);
+	return nn_learning(x, y, rate, lamda);
 }
 
 int nn_question(unsigned char *xdata, int ydata, int isize)

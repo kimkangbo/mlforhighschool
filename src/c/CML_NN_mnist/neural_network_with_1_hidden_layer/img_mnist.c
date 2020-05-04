@@ -144,7 +144,7 @@ void img_mnist_learning(img_mnist_info *img)
             break;
         }
         
-		cost = nn_running (p, (int)ubyte, isize, LEARNING_RATE);
+		cost = nn_running (p, (int)ubyte, isize, LEARNING_RATE, REG_OVERFITTING_RATE);
 
 		if (!(k % 1000))
 			printf("Learning Count:%u, Cost: %f\n", k, cost);
