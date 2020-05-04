@@ -14,10 +14,13 @@
 #include <unistd.h>
 
 #define NUM_INPUTS     784          ///28 * 28
-#define NUM_HIDDEN_1     256       ///Accuracy: 0.9596, RunTime: 71m, 0.9474, 0.9618, 0.9691, 0.9699, 0.971
+//#define NUM_HIDDEN_1     256       ///Accuracy: 0.9596, RunTime: 71m, 0.9474, 0.9618, 0.9691, 0.9699, 0.971
 ///#define NUM_HIDDEN_1     128       ///Accuracy: 0.9536, RunTime: 28m
-//#define NUM_HIDDEN_1      64          ///Accuracy: 0.9508, RunTime: 12m, 0.9697
+#define NUM_HIDDEN_1      64          ///Accuracy: 0.9508, RunTime: 12m, 0.9697
 #define NUM_OUTPUTS     10
+#define ACT_TANH        1
+#define ACT_RELU        2
+#define ACT_TYPE		ACT_RELU
 
 ///Weights
 float W0[NUM_INPUTS+1][NUM_HIDDEN_1];
@@ -34,6 +37,50 @@ static void nn_debug (const char *label, float *m, int rows, int cols)
 	for (i=0; i<rows*cols; i++)
         printf ("%10.5f%c", m[i], (cols>1 && i%cols==cols-1) ? '\n' : ' ');
 	if (cols==1) printf ("\n");
+}
+
+static float activation(float x, int activation_type){
+	float result = 0.0;
+	
+	switch(activation_type){
+		case ACT_TANH: // tahn
+			result = tanh(x); //apply activation function on other hidden nodes
+			break;
+		case ACT_RELU: // ReLU
+			if(x>0.0){
+				result = x;
+			}else{
+				result = 0;
+			}
+			break;
+		default:
+			result = tanh(result); //apply activation function on other hidden nodes
+			break;
+	}
+	
+	return result;
+}
+
+static float diff_actv(float x, int activation_type){
+	float result = 0.0;
+	
+	switch(activation_type){
+		case ACT_TANH: // tahn
+			result = 1-pow(tanh(x),2); //apply activation function gradient temporary; //apply activation function on other hidden nodes
+			break;
+		case ACT_RELU: // ReLU
+			if(x>0.0){
+				result = 1;
+			}else{
+				result = 0;
+			}
+			break;
+		default:
+			result = 1-pow(tanh(x),2); //apply activation function on other hidden nodes
+			break;
+	}
+	
+	return result;
 }
 
 static float nn_learning(float *x, float *y, float learningrate)
@@ -63,8 +110,8 @@ static float nn_learning(float *x, float *y, float learningrate)
     if (debug>=2) nn_debug ("hidden weighted sums", Z0, NUM_HIDDEN_1, 1);
 
     h0[NUM_HIDDEN_1]=1; //set the bias for the last hidden node to 1
-    for (ih0=0; ih0<NUM_HIDDEN_1; ih0++){
-        h0[ih0] = tanh (Z0[ih0]); //apply activation function on other hidden nodes
+    for (ih0=0; ih0<NUM_HIDDEN_1; ih0++){		
+		h0[ih0] = activation(Z0[ih0], ACT_TYPE); //apply activation function on other hidden nodes
 	}
     if (debug>=2) nn_debug ("hidden node activation values", h0, NUM_HIDDEN_1+1, 1);
 
@@ -117,7 +164,7 @@ static float nn_learning(float *x, float *y, float learningrate)
     if (debug>=2) nn_debug ("back propagated error values", h0, NUM_HIDDEN_1+1, 1);
 
     for (ih0=0; ih0<NUM_HIDDEN_1; ih0++){
-        Z0[ih0] = h0[ih0] * (1 - pow (tanh (Z0[ih0]), 2)); //apply activation function gradient temporary
+        Z0[ih0] = h0[ih0] * diff_actv(Z0[ih0], ACT_TYPE); //apply activation function gradient temporary
 	}
     if (debug>=2) nn_debug ("hidden weighted sums after gradient", Z0, NUM_HIDDEN_1, 1);
 
@@ -171,7 +218,7 @@ int nn_answer(float *x, float *y)
 
     h0[NUM_HIDDEN_1]=1; //set the bias for the last hidden node to 1
     for (h=0; h<NUM_HIDDEN_1; h++)
-        h0[h] = tanh (Z0[h]); //apply activation function on other hidden nodes
+        h0[h] = activation(Z0[h], ACT_TYPE); //apply activation function on other hidden nodes
 
     memset (Z1, 0, sizeof (Z1)); //set all the weighted sums to zero
     for (o=0; o<NUM_OUTPUTS; o++)
