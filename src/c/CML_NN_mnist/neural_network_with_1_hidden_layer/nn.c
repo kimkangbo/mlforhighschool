@@ -14,10 +14,9 @@
 #include <unistd.h>
 
 #define NUM_INPUTS     784          ///28 * 28
-///#define NUM_HIDDEN_1     256       ///Accuracy: 0.9596, RunTime: 71m
+#define NUM_HIDDEN_1     256       ///Accuracy: 0.9596, RunTime: 71m, 0.9474, 0.9618, 0.9691, 0.9699, 0.971
 ///#define NUM_HIDDEN_1     128       ///Accuracy: 0.9536, RunTime: 28m
-#define NUM_HIDDEN_1      64          ///Accuracy: 0.9508, RunTime: 12m
-///#define NUM_HIDDEN_1      32       ///Accuracy: 0.9283
+//#define NUM_HIDDEN_1      64          ///Accuracy: 0.9508, RunTime: 12m, 0.9697
 #define NUM_OUTPUTS     10
 
 ///Weights
