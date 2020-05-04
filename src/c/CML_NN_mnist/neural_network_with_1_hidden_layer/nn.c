@@ -180,13 +180,13 @@ static float nn_learning(float *x, float *y, float learningrate, float lamda)
     /// Now add in the adjustments, added W regularization for overfitting
     for (ih0=0; ih0<NUM_HIDDEN_1+1; ih0++){
         for (io=0; io<NUM_OUTPUTS; io++){
-            W1[ih0][io] = (1-learningrate*lamda/NUM_INPUTS)*W1[ih0][io] - learningrate * dW1[ih0][io];
+            W1[ih0][io] = (1-learningrate*lamda)*W1[ih0][io] - learningrate * dW1[ih0][io];
 		}
 	}
 
     for (in=0; in<NUM_INPUTS+1; in++){
         for (ih0=0; ih0<NUM_HIDDEN_1; ih0++){
-            W0[in][ih0] = (1-learningrate*lamda/NUM_INPUTS)*W0[in][ih0] - learningrate * dW0[in][ih0];
+            W0[in][ih0] = (1-learningrate*lamda)*W0[in][ih0] - learningrate * dW0[in][ih0];
 		}
 	}
 
